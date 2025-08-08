@@ -171,6 +171,7 @@ class Pi0(_model.BaseModel):
         self.action_time_mlp_out = nnx.Linear(action_expert_config.width, action_expert_config.width, rngs=rngs)
         self.action_out_proj = nnx.Linear(action_expert_config.width, config.action_dim, rngs=rngs)
 
+    # 이미지와 언어 명령어처럼 상황을 설명하는 정보를 처리합니다. 이 정보들은 모델의 "전제 조건(prefix)"이 됩니다.
     @at.typecheck
     def embed_prefix(
         self, obs: _model.Observation
@@ -205,6 +206,7 @@ class Pi0(_model.BaseModel):
         ar_mask = jnp.array(ar_mask)
         return tokens, input_mask, ar_mask
 
+    # 로봇의 현재 상태(state)와 예측할 행동(actions)에 대한 정보를 처리합니다. 이 정보들은 전제 조건 뒤에 붙는 "추가 정보(suffix)"가 됩니다.
     @at.typecheck
     def embed_suffix(
         self, obs: _model.Observation, noisy_actions: _model.Actions, timestep: at.Float[at.Array, " b"]

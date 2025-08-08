@@ -262,8 +262,8 @@ class LeRobotLiberoDataConfig(DataConfigFactory):
 
     @override
     def create(self, assets_dirs: pathlib.Path, model_config: _model.BaseModelConfig) -> DataConfig:
-        # The repack transform is *only* applied to the data coming from the dataset,
-        # and *not* during inference. We can use it to make inputs from the dataset look
+        # The repack transform is only applied to the data coming from the dataset,
+        # and not during inference. We can use it to make inputs from the dataset look
         # as close as possible to those coming from the inference environment (e.g. match the keys).
         # Below, we match the keys in the dataset (which we defined in the data conversion script) to
         # the keys we use in our inference pipeline (defined in the inference script for libero).
@@ -278,7 +278,8 @@ class LeRobotLiberoDataConfig(DataConfigFactory):
                         "observation/wrist_image": "wrist_image",
                         "observation/state": "state",
                         "actions": "actions",
-                        "prompt": "prompt",
+                        #TODO:
+                        "prompt": "task",
                     }
                 )
             ]
@@ -420,14 +421,14 @@ class TrainConfig:
     # will increase memory and CPU usage.
     num_workers: int = 2
     # Number of train steps (batches) to run.
-    num_train_steps: int = 30_000
+    num_train_steps: int = 60_000
 
     # How often (in steps) to log training metrics.
     log_interval: int = 100
     # How often (in steps) to save checkpoints.
-    save_interval: int = 1000
+    save_interval: int = 10000
     # If set, any existing checkpoints matching step % keep_period == 0 will not be deleted.
-    keep_period: int | None = 5000
+    keep_period: int | None = 10_000
 
     # If true, will overwrite the checkpoint directory if it already exists.
     overwrite: bool = False
@@ -566,8 +567,10 @@ _CONFIGS = [
         # Here is an example of loading a pi0 model for LoRA fine-tuning.
         model=pi0.Pi0Config(paligemma_variant="gemma_2b_lora", action_expert_variant="gemma_300m_lora"),
         data=LeRobotLiberoDataConfig(
-            repo_id="physical-intelligence/libero",
-            base_config=DataConfig(prompt_from_task=True),
+            repo_id="physical-intelligence/libero_tm_test_50",
+            #TODO: Modify the base config to match your dataset.
+            #base_config=DataConfig(prompt_from_task=True),
+            base_config=DataConfig(prompt_from_task=False),
         ),
         weight_loader=weight_loaders.CheckpointWeightLoader("s3://openpi-assets/checkpoints/pi0_base/params"),
         num_train_steps=30_000,

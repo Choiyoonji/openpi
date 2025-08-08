@@ -2,6 +2,13 @@
 # docker compose -f scripts/docker/compose.yml up --build
 services:
   openpi_server:
+    shm_size: "16g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      stack: 67108864
+      
     image: openpi_server
     build:
       context: ../..
@@ -9,15 +16,20 @@ services:
     init: true
     tty: true
     network_mode: host
+    # runtime: nvidia
+    # privileged: true
     # Populate configured openpi data home to /openpi_assets inside the container.
     # Populate aws credential inside the container.
     volumes:
       - $PWD:/app
       - ${OPENPI_DATA_HOME:-~/.cache/openpi}:/openpi_assets
+      - /media/choiyj/mnt_store:/media/choiyj/mnt_store
     environment:
       - SERVER_ARGS
       - OPENPI_DATA_HOME=/openpi_assets
       - IS_DOCKER=true
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
 
     # Comment out this block if not running on a machine with GPUs.
     deploy:

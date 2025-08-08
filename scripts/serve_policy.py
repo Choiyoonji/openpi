@@ -97,6 +97,7 @@ def create_policy(args: Args) -> _policy.Policy:
 
 
 def main(args: Args) -> None:
+    # return None
     policy = create_policy(args)
     policy_metadata = policy.metadata
 
@@ -118,5 +119,6 @@ def main(args: Args) -> None:
 
 
 if __name__ == "__main__":
+    
     logging.basicConfig(level=logging.INFO, force=True)
     main(tyro.cli(Args))
