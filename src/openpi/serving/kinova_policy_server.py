@@ -14,15 +14,17 @@ from openpi.policies import policy_config
 from openpi.shared import download
 
 # 모델 사전 로드
-cfg = config.get_config("pi0_libero_low_mem_finetune")
-checkpoint_dir = download.maybe_download("/app/checkpoints/pi0_libero_low_mem_finetune/my_experiment_hair_straightener_70_fast/29999")
+cfg = config.get_config("pi0_libero_low_mem_finetune2")
+checkpoint_dir = download.maybe_download("/app/checkpoints/my_experiment_tm_co_150/59999")
+# checkpoint_dir = download.maybe_download("/app/checkpoints/pi0_libero_low_mem_finetune/my_experiment_tm_co_75/29999")
+# checkpoint_dir = download.maybe_download("/app/checkpoints/tm_co_checkpoints/pi0_libero_low_mem_finetune/my_experiment_tm_co_100/29999")
 #cfg = config.get_config("pi0_fast_libero_low_mem_finetune")
 #checkpoint_dir = download.maybe_download("/app/checkpoints/pi0_fast_libero_low_mem_finetune/my_experiment/20000")
 policy = policy_config.create_trained_policy(cfg, checkpoint_dir)
 
 # 소켓 서버 설정
 HOST = '127.0.0.1'
-PORT = 12345
+PORT = 12341
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind((HOST, PORT))
@@ -65,12 +67,13 @@ while True:
             input_dict = {
                 "observation/image": preprocess(input_payload["image"]),
                 "observation/wrist_image": preprocess(input_payload["wrist_image"]),
+                # "observation/right_wrist_image": preprocess(input_payload["right_wrist_image"]),
                 "observation/state": np.array(input_payload["state"], dtype=np.float32),
                 "prompt": np.array([input_payload["task"]])
             }
 
             output = policy.infer(input_dict)
-            action = output["actions"][:10, :8].tolist()
+            action = output["actions"][:, :8].tolist()
             print('추론 시간: ', output["policy_timing"]["infer_ms"], 'ms')
 
             result = pickle.dumps(action)

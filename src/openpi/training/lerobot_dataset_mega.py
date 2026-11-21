@@ -7,10 +7,10 @@ from lerobot.common.datasets.lerobot_dataset import LeRobotDataset, HF_LEROBOT_H
 import shutil
 
 # 데이터셋 경로 설정
-base_root = Path("/media/choiyj/mnt_store/Thermal")
-REPO_NAME = "physical-intelligence/libero_tm_test_50"
+base_root = Path("/media/choiyj/mnt_store/Combined_75")
+REPO_NAME = "physical-intelligence/libero_tm_co_75" # libero_(tm or rgb)_(li or se or ...)_(pl or pi or tu or all)_(70 or 50 or 30)
 output_path = HF_LEROBOT_HOME / REPO_NAME
-
+target_task = "Organize_the_space_near_the_power_strip"
 if output_path.exists():
     shutil.rmtree(output_path)
 
@@ -24,49 +24,41 @@ dataset = LeRobotDataset.create(
         "state": {"dtype": "float32", "shape": (8,), "names": ["state"]},
         "actions": {"dtype": "float32", "shape": (8,), "names": ["actions"]},
     },
-    #PRE TODO: 1,0ìœ¼ë¡œ ë°”ê¿”ì„œ ë„ì „í•´ë³¼ê²ƒ
+    #PRE TODO: 1,0으로 바꿔서 도전해볼것
     image_writer_threads=10,
     image_writer_processes=5,
 )
 
 for task_dir in base_root.iterdir():
     if not task_dir.is_dir():
+        print("not dir")
         continue
-
+    if task_dir.name != target_task:
+        print(f"Processing task: {task_dir.name}")
+        print("not target task")
+        continue
+    
     for dataset_dir in task_dir.glob("dataset_*"):
         json_path = dataset_dir / "robot_data.json"
 
-        cam1_path = dataset_dir / "camera1.avi"
-        cam2_path = dataset_dir / "camera2.avi"
-        
+        cam1_path = dataset_dir / "camera1.mp4"
+        cam2_path = dataset_dir / "camera3.mp4"
+
         if not (json_path.exists() and cam1_path.exists() and cam2_path.exists()):
+            print("not exist")
             continue
 
         try:
             with open(json_path, "r") as f:
                 robot_json = json.load(f)
             robot_data = robot_json["robot_data"]
-            # task_prompt = "Turn off the hair straightener if it is hot."
-            # task_num = robot_json["task"]
-            
-            # task_map = {
-            #     1: "Turn off the power strip switches for battery chargers with overheated batteries",
-            #     2: "Turn off the main power switch of the power strip",
-            #     3: "turn off hair straightener",
-            #     4: "pick up unplugged wire from floor",
-            #     5: "place unplugged wire to the right side of power strip",
-            # }
             task_prompt = robot_json["task"]
-
 
             cap_cam1 = cv2.VideoCapture(str(cam1_path))
             cap_cam2 = cv2.VideoCapture(str(cam2_path))
 
             for i, frame in enumerate(robot_data):
                 try:
-                    #dddd
-                    end_state = frame["end_state"]
-
                     idx_cam1 = frame["frame_idx_cam1"] - 1
                     idx_cam2 = frame["frame_idx_cam2"] - 1
 
@@ -78,9 +70,10 @@ for task_dir in base_root.iterdir():
                     if not (ret1 and ret2):
                         raise ValueError("Frame read error")
 
+                    # wrist_img = Image.fromarray(f1).resize((256, 256))
+                    wrist_img = Image.fromarray(cv2.cvtColor(f1, cv2.COLOR_BGR2RGB)).resize((256, 256))
                     main_img = Image.fromarray(cv2.cvtColor(f2, cv2.COLOR_BGR2RGB)).resize((256, 256))
-                    wrist_img= Image.fromarray(cv2.cvtColor(f1, cv2.COLOR_BGR2RGB)).resize((256, 256))
-
+            
                     state = frame["joint_angles_deg"] + [0.0] + [frame["gripper_position"]]
                     if frame["action_joint_angles"] is not None:
                         end_state_flag = 1.0 if frame.get("end_state", False) else 0.0
@@ -99,7 +92,7 @@ for task_dir in base_root.iterdir():
                 except Exception as e:
                     print(f"Frame {i} skipped in {dataset_dir.name}: {e}")
 
-            print(f"âœ… Loaded {dataset_dir}")
+            print(f"✅ Loaded {dataset_dir}")
             cap_cam1.release()
             cap_cam2.release()
 
