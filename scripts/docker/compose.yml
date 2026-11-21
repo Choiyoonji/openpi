@@ -1,7 +1,7 @@
 # Run with:
 # docker compose -f scripts/docker/compose.yml up --build
 services:
-  openpi_server:
+  openpi_tm:
     shm_size: "16g"
     ulimits:
       memlock:
@@ -9,10 +9,10 @@ services:
         hard: -1
       stack: 67108864
       
-    image: openpi_server
-    build:
-      context: ../..
-      dockerfile: scripts/docker/serve_policy.Dockerfile
+    image: docker-openpi_tm:v2-slim
+    # build:
+    #   context: ../..
+    #   dockerfile: scripts/docker/serve_policy.Dockerfile
     init: true
     tty: true
     network_mode: host
@@ -23,7 +23,7 @@ services:
     volumes:
       - $PWD:/app
       - ${OPENPI_DATA_HOME:-~/.cache/openpi}:/openpi_assets
-      - /media/choiyj/mnt_store:/media/choiyj/mnt_store
+      - /mnt/irobot_fast10g_nas:/mnt/irobot_fast10g_nas
     environment:
       - SERVER_ARGS
       - OPENPI_DATA_HOME=/openpi_assets

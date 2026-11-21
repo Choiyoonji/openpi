@@ -6,10 +6,13 @@ import numpy as np
 from lerobot.common.datasets.lerobot_dataset import LeRobotDataset, HF_LEROBOT_HOME
 import shutil
 
-# 기본 경로 설정
-base_root = Path("/media/choiyj/mnt_store/data_collection")
-REPO_NAME = "physical-intelligence/libero_rgb_hair_straightener_55"
+# 데이터셋 경로 설정
+base_root = Path("/mnt/irobot_fast10g_nas/data_collection/power_strip_50/OnlyRGB")
+REPO_NAME = "physical-intelligence/libero_rgb_se_pi_50"
+# REPO_NAME = "physical-intelligence/libero_rgb_se_pl_50"
 output_path = HF_LEROBOT_HOME / REPO_NAME
+target_task = "Pick_up_the_unplugged_charger"
+# target_task = "Place_the_charger_in_the_box" 
 
 if output_path.exists():
     shutil.rmtree(output_path)
@@ -32,7 +35,8 @@ dataset = LeRobotDataset.create(
 for task_dir in base_root.iterdir():
     if not task_dir.is_dir():
         continue
-
+    if task_dir.name != target_task:
+        continue
     for dataset_dir in task_dir.glob("dataset_*"):
         json_path = dataset_dir / "robot_data.json"
 
